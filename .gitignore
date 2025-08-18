@@ -7,9 +7,19 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
+# Node.js dependencies
+client/node_modules/
+server/node_modules/
+
+# Build output
+client/dist/
+server/dist/
 dist-ssr
+
+# Local env files
+.env
+client/.env
+server/.env
 *.local
 
 # Editor directories and files
@@ -22,3 +32,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Coverage / testing
+coverage/
+*.lcov
