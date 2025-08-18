@@ -4,7 +4,7 @@ import cloudinary from "../lib/cloudinary.js";
 import {io, userSocketMap} from "../server.js"
 
 //get all users except the logged in user
-export const getUsersForSidebar = async()=>{
+export const getUsersForSidebar = async (req, res) => {
     try {
         const userId = req.user._id; 
         const filteredUsers=await User.find({_id: {$ne: userId}}).select("-password");
@@ -12,7 +12,7 @@ export const getUsersForSidebar = async()=>{
         //count number of messages not seen
         const unseenMessages ={}
         const promises = filteredUsers.map(async (user) => {
-        const messages = await Message.find({senderId:userId, receiverId:userId, seen:false})
+        const messages = await Message.find({ senderId: user._id, receiverId: userId, seen: false })
         if(messages.length > 0) {
             unseenMessages[user._id] = messages.length;
         }
@@ -37,7 +37,7 @@ export const getMessages =async (req,res)=>{
                 {senderId: selectedUserId, receiverId: myId},
             ]
         })
-        awair.Message.updateMany(
+        await Message.updateMany(
             {senderId: selectedUserId, receiverId: myId},
             {seen: true}
         );
@@ -82,13 +82,15 @@ export const sendMessage = async (req, res) => {
             image: imageUrl
         })
 
-        //Emit the new message to the reciever's socket
-        const recieverSocketId = userSocketMap[receiverId];
-        if (recieverSocketId){
-            io.to(recieverSocketId).emit("newMessage",newMessage)
+        //Emit the new message to all receiver's sockets
+        const receiverSocketIds = userSocketMap[receiverId];
+        if (receiverSocketIds && receiverSocketIds.size > 0){
+            for (const socketId of receiverSocketIds) {
+                io.to(socketId).emit("newMessage", newMessage);
+            }
         }
         
-        res.json({success: true, message: newMessage});
+        res.json({success: true, newMessage: newMessage});
     } catch (error) {
         console.log(error);
         res.json({success: false, message: error.message});

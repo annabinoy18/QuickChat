@@ -28,7 +28,8 @@ export const signup= async (req,res)=>{
         });
 
         const token = generateToken(newUser._id)
-        res.json({success:true, userData: newUser, token, message: "Account created successfully"});
+        const safeUser = await User.findById(newUser._id).select("-password");
+        res.json({success:true, userData: safeUser, token, message: "Account created successfully"});
     }catch(error){
         console.log(error);
         res.json({success:false, message: error.message});
@@ -39,16 +40,24 @@ export const signup= async (req,res)=>{
 export const login = async (req, res) => {
     try{
         const { email, password} = req.body;
-        const userData= await User.findOne({email})
 
-        const isPasswordCorrect= await bcrypt.compare(password, userData.password);
+        if(!email || !password){
+            return res.json({success:false, message: "All fields are required"});
+        }
 
+        const user = await User.findOne({ email });
+        if(!user){
+            return res.json({success:false, message: "Invalid email or password"});
+        }
+
+        const isPasswordCorrect = await bcrypt.compare(password, user.password);
         if(!isPasswordCorrect){
             return res.json({success:false, message: "Invalid email or password"});
         }
 
-        const token = generateToken(userData._id);
-        res.json({success:true, userData, token, message: "Login successful"});
+        const token = generateToken(user._id);
+        const safeUser = await User.findById(user._id).select("-password");
+        res.json({success:true, userData: safeUser, token, message: "Login successful"});
 
     }catch(error){
         console.log(error);

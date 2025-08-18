@@ -16,21 +16,32 @@ export const io = new Server(httpServer, { // ✅ Use Server class
 });
 
 //store online users
-export const userSocketMap = {}; // userId: socketId mapping
+// userId: Set of socketIds mapping
+export const userSocketMap = {};
 
 //socket.io connection handling
 io.on("connection", (socket) => {
     const userId = socket.handshake.query.userId;
     console.log("User Connected", userId);
 
-    if (userId) userSocketMap[userId] = socket.id;
+    if (userId) {
+        if (!userSocketMap[userId]) {
+            userSocketMap[userId] = new Set();
+        }
+        userSocketMap[userId].add(socket.id);
+    }
 
     //Emit online users to all connected clients
     io.emit("getOnlineUsers", Object.keys(userSocketMap));
 
     socket.on("disconnect", () => {
         console.log("User Disconnected", userId);
-        delete userSocketMap[userId];
+        if (userId && userSocketMap[userId]) {
+            userSocketMap[userId].delete(socket.id);
+            if (userSocketMap[userId].size === 0) {
+                delete userSocketMap[userId];
+            }
+        }
         io.emit("getOnlineUsers", Object.keys(userSocketMap));
     });
 });

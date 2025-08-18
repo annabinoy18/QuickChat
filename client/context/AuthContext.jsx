@@ -91,8 +91,8 @@ export const AuthProvider =({children})=>{
     useEffect(()=>{
         if(token){
             axios.defaults.headers.common["token"]=token;
+            checkAuth();
         }
-        checkAuth();
     },[])
 
     const value = {
