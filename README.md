@@ -118,7 +118,6 @@ Create a `docs/screenshots/` folder at the project root and drop your images the
 - For production, restrict Socket.IO CORS and configure secure secrets.
 - Cloudinary is optional for images; if you disable it, adjust the profile/message image flows.
 
-### License
-Add your license here.
+
 
 
